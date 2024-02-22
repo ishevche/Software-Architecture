@@ -1,0 +1,24 @@
+services:
+  shevchenko_hw1_fcd:
+    image: facade_service
+    ports:
+      - "8080:8080"
+    links:
+      - "shevchenko_hw1_log:log"
+      - "shevchenko_hw1_msg:msg"
+    environment:
+      - GIN_MODE=release
+
+  shevchenko_hw1_log:
+    image: logging_service
+    ports:
+      - "8081:8081"
+    environment:
+      - GIN_MODE=release
+
+  shevchenko_hw1_msg:
+    image: messaging_service
+    ports:
+      - "8082:8082"
+    environment:
+      - GIN_MODE=release
