@@ -1,0 +1,43 @@
+services:
+  node1:
+    container_name: hw2_shevchenko_node1
+    networks:
+      - net
+    ports:
+      - 5701:5701
+    image: hazelcast/hazelcast:latest
+    environment:
+      - HZ_CLUSTERNAME=hw2_shevchenko_hazelcast
+      - HZ_QUEUE_BOUNDEDQUEUE_MAXSIZE=10
+  node2:
+    container_name: hw2_shevchenko_node2
+    networks:
+      - net
+    ports:
+      - 5702:5701
+    image: hazelcast/hazelcast:latest
+    environment:
+      - HZ_CLUSTERNAME=hw2_shevchenko_hazelcast
+      - HZ_QUEUE_BOUNDEDQUEUE_MAXSIZE=10
+  node3:
+    container_name: hw2_shevchenko_node3
+    networks:
+      - net
+    ports:
+      - 5703:5701
+    image: hazelcast/hazelcast:latest
+    environment:
+      - HZ_CLUSTERNAME=hw2_shevchenko_hazelcast
+      - HZ_QUEUE_BOUNDEDQUEUE_MAXSIZE=10
+  ui:
+    container_name: hw2_shevchenko_ui
+    networks:
+      - net
+    ports:
+      - 8080:8080
+    image: hazelcast/management-center:latest
+
+networks:
+  net:
+    name: hw2_shevchenko_network
+    driver: bridge
