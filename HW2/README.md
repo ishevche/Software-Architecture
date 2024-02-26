@@ -1,9 +1,10 @@
 # Homework 2: Hands-on with Hazelcast Database
 
-Author: [**Shevchenko Ivan**](https://github.com/ishevche) <br>
-GitHub: [Software-Architecture/HW2](https://github.com/ishevche/Software-Architecture/tree/hazelcast-basics/HW2)
+Author: [**Shevchenko Ivan**](https://github.com/ishevche) 
 
-## 📝 Description
+GitHub: [https://github.com/ishevche/Software-Architecture/tree/hazelcast-basics/HW2](https://github.com/ishevche/Software-Architecture/tree/hazelcast-basics/HW2)
+
+## Description
 
 In this homework, I have created a Hazelcast cluster consisting of three nodes.
 After that, I have tested the work of a distributed map by filling it with items,
@@ -14,7 +15,7 @@ distributed queue.
 All the client side code is written using Golang, and the Hazelcast cluster is
 wrapped in using Docker compose.
 
-## 🖥 Usage
+## Usage
 
 To run the application do the following steps:
 
@@ -85,41 +86,51 @@ with Hazelcast cluster. They are the following ones:
 ## Results
 
 First of all, I have started the cluster:
+
 ![Cluster is started][start_up]
 
 After that, I have launched `insert` (Golang library for Hazelcast prints
 some debug info in the terminal):
+
 ![Insertion in the cluster][insertion]
 
 In the Manager Center we can see that map is created and contains `1000`
 keys:
+
 ![Map is created][map_created]
 
 Also, we can observe the distribution of keys in the nodes:
+
 ![Keys distribution][keys_distribution]
 
 Now I will kill one of the nodes. As Hazelcast is a distributed system,
 it has mechanisms to prevent data losses during such events. In this case,
 data was cached on other nodes, so it can be restored without any loss:
+
 ![Data distribution after single node loss][first_node_loss]
 
 We can repeat the same by killing one more node. Data still won't be lost,
 as nodes had plenty of time to replicate the data to the corresponding
 caches:
+
 ![Data distribution after second loss][second_node_loss]
 
 This won't be so unfortunately if two nodes are killed almost simultaneously,
 so they won't have enough time to replicate data, so after restarting and
 refilling the cluster, I have tried to kill two nodes at the same time.
 As expected, some data was lost:
+
 ![Data distribution after two simultaneous losses][double_node_loss]
+
 To tackle this issue, we should not kill nodes, but shutdown them
 gracefully, then, according to the documentation, nodes should send
 the missing data if there is such.
 
 After that, I have restarted the cluster one more time and launched
 `increment` script, omitting all debug info printed by library:
+
 ![Output of the `increment` script][increment]
+
 On the screenshot, we can see that all three methods have successfully
 completed.
 
@@ -152,7 +163,9 @@ over and over. In case of more challenging update logic using locks could be
 faster as repeating update could take much more time.
 
 Lastly, I have launched `queue` script and it resulted in the following:
+
 ![Output of the `queue` script][queue]
+
 We can see that all `100` values where consumed by the consumers, and moreover
 they separated the values in half, so each one handled only `50`. This could help
 for systems with high workload to distribute tasks between different instances of
@@ -163,9 +176,13 @@ the environmental variable for each node: `HZ_QUEUE_BOUNDEDQUEUE_MAXSIZE=10`.
 This set a bound for queue `boundedqueue` to have maximum 10 elements in it.
 So now I have commented the code responsible for launching the consumers, and
 launched it one more time. The program never exited:
+
 ![Running `queue` script with only producer][producer_queue]
+
 And in the Manager Center we can see the reason of this:
+
 ![Number of element in the queue][manager_center_producer_queue]
+
 So the producer put 10 elements in the queue, so it filled up. Then it tried to
 put the next one. However, Hazelcast didn't allow it to do so. As specified in
 the documentation, code just fell into sleep, waiting for a free space to appear,
