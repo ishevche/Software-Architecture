@@ -1,0 +1,167 @@
+services:
+  fcd:
+    pull_policy: build
+    container_name: hw3_shevchenko_fcd
+    networks:
+      - net
+    image: facade_service
+    build:
+      context: facade_service
+    ports:
+      - 8080:8080
+    environment:
+      - GIN_MODE=release
+      - LOG_ADDRESSES=http://log1:8080/log,http://log2:8080/log,http://log3:8080/log
+      - MSG_ADDRESSES=http://msg1:8080/msg,http://msg2:8080/msg
+    depends_on:
+      - msg1
+      - msg2
+      - log1
+      - log2
+      - log3
+
+  msg1:
+    pull_policy: build
+    container_name: hw3_shevchenko_msg1
+    networks:
+      - net
+    image: messaging_service
+    build:
+      context: messaging_service
+    environment:
+      - GIN_MODE=release
+    depends_on:
+      - broker
+  msg2:
+    pull_policy: build
+    container_name: hw3_shevchenko_msg2
+    networks:
+      - net
+    image: messaging_service
+    build:
+      context: messaging_service
+    environment:
+      - GIN_MODE=release
+    depends_on:
+      - broker
+  zookeeper:
+    image: confluentinc/cp-zookeeper:6.2.0
+    hostname: zookeeper
+    networks:
+      - net
+    ports:
+      - "2181:2181"
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+  broker:
+    image: confluentinc/cp-kafka:6.2.0
+    hostname: broker
+    container_name: broker
+    depends_on:
+      - zookeeper
+    networks:
+      - net
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_CREATE_TOPICS: "queue:10:1"
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: localhost
+
+
+  log1:
+    pull_policy: build
+    container_name: hw3_shevchenko_log1
+    networks:
+      - net
+    image: logging_service
+    build:
+      context: logging_service
+    environment:
+      - GIN_MODE=release
+      - HZ_ADDRESS=node1:5701
+    depends_on:
+      node1:
+        condition: service_healthy
+  log2:
+    pull_policy: build
+    container_name: hw3_shevchenko_log2
+    networks:
+      - net
+    image: logging_service
+    build:
+      context: logging_service
+    environment:
+      - GIN_MODE=release
+      - HZ_ADDRESS=node2:5701
+    depends_on:
+      node2:
+        condition: service_healthy
+  log3:
+    pull_policy: build
+    container_name: hw3_shevchenko_log3
+    networks:
+      - net
+    image: logging_service
+    build:
+      context: logging_service
+    environment:
+      - GIN_MODE=release
+      - HZ_ADDRESS=node3:5701
+    depends_on:
+      node3:
+        condition: service_healthy
+
+
+  node1:
+    container_name: hw3_shevchenko_node1
+    networks:
+      - net
+    image: hazelcast/hazelcast:latest
+    healthcheck:
+      test: curl --fail http://localhost:5701/hazelcast/health
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    environment:
+      - HZ_CLUSTERNAME=hw3_shevchenko_hazelcast
+      - HZ_QUEUE_BOUNDEDQUEUE_MAXSIZE=10
+  node2:
+    container_name: hw3_shevchenko_node2
+    networks:
+      - net
+    image: hazelcast/hazelcast:latest
+    healthcheck:
+      test: curl --fail http://localhost:5701/hazelcast/health
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    environment:
+      - HZ_CLUSTERNAME=hw3_shevchenko_hazelcast
+      - HZ_QUEUE_BOUNDEDQUEUE_MAXSIZE=10
+  node3:
+    container_name: hw3_shevchenko_node3
+    networks:
+      - net
+    image: hazelcast/hazelcast:latest
+    healthcheck:
+      test: curl --fail http://localhost:5701/hazelcast/health
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    environment:
+      - HZ_CLUSTERNAME=hw3_shevchenko_hazelcast
+      - HZ_QUEUE_BOUNDEDQUEUE_MAXSIZE=10
+
+networks:
+  net:
+    name: hw3_shevchenko_network
+    driver: bridge
